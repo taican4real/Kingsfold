@@ -1,0 +1,6 @@
+{
+  "name": "Kingsfold International Academy",
+  "description": "Premium educational website for a prestigious British International School.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@theme {
+  --color-wine: #6B0F1A;
+  --color-wine-dark: #4A0A12;
+  --color-wine-light: #8E1423;
+  --color-cream: #F5E6CC;
+  --color-cream-light: #FDF9F1;
+  --color-red: #C1121F;
+  --color-gray: #737373;
+  --color-gray-dark: #1a1a1a;
+  --color-gray-light: #f3f4f6;
+  
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+:root {
+  --body-bg-start: #ffffff;
+  --body-bg-mid: #ffffff;
+  --body-bg-end: #ffffff;
+  --body-text: var(--color-gray-dark);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+.dark {
+  --body-bg-start: #0f0f11;
+  --body-bg-mid: #151518;
+  --body-bg-end: #09090b;
+  --body-text: #f4f4f5;
+  --glass-bg: rgba(18, 18, 20, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Override custom colors */
+  --color-wine: #ec3e52;
+  --color-wine-dark: #121214;
+  --color-wine-light: #f87083;
+  --color-cream: #1c1917;
+  --color-cream-light: #161514;
+  --color-red: #f43f5e;
+  --color-gray: #a1a1aa;
+  --color-gray-dark: #f4f4f5;
+  --color-gray-light: #27272a;
+  
+  /* Redefining Tailwind V4 specific colors */
+  --color-white: #17171d;
+  
+  --color-gray-50: #18181b;
+  --color-gray-100: #27272a;
+  --color-gray-200: #3f3f46;
+  --color-gray-300: #52525b;
+  --color-gray-400: #71717a;
+  --color-gray-500: #a1a1aa;
+  --color-gray-600: #d4d4d8;
+  --color-gray-700: #e4e4e7;
+  --color-gray-800: #f4f4f5;
+  --color-gray-900: #fafafa;
+
+  --color-stone-50: #1c1917;
+  --color-stone-100: #292524;
+  --color-stone-200: #44403c;
+  --color-stone-300: #57534e;
+  --color-stone-400: #78716c;
+  --color-stone-500: #a8a29e;
+  --color-stone-600: #d6d3d1;
+  --color-stone-700: #e7e5e4;
+  --color-stone-800: #f5f5f4;
+  --color-stone-900: #fafaf9;
+
+  --color-zinc-50: #18181b;
+  --color-zinc-100: #27272a;
+  --color-zinc-200: #3f3f46;
+  --color-zinc-300: #52525b;
+  --color-zinc-400: #71717a;
+  --color-zinc-500: #a1a1aa;
+  --color-zinc-600: #d4d4d8;
+  --color-zinc-700: #e4e4e7;
+  --color-zinc-800: #f4f4f5;
+  --color-zinc-900: #fafafa;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, var(--body-bg-start) 0%, var(--body-bg-mid) 50%, var(--body-bg-end) 100%);
+  background-attachment: fixed;
+  color: var(--body-text);
+  scroll-behavior: smooth;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+h1, h2, h3, h4, h5, h6, .serif {
+  font-family: var(--font-serif);
+}
+
+.text-wine { color: var(--color-wine); }
+.bg-wine { background-color: var(--color-wine); }
+.border-wine { border-color: var(--color-wine); }
+
+.bg-cream { background-color: var(--color-cream); }
+.text-cream { color: var(--color-cream); }
+
+.bg-red { background-color: var(--color-red); }
+.text-red { color: var(--color-red); }
+
+/* Custom utility classes for glassmorphism */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-dark {
+  background: rgba(107, 15, 26, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* Markdown Table Styles */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.markdown-body th {
+  background-color: #6B0F1A;
+  color: white;
+  text-align: left;
+  padding: 1rem;
+  border: 1px solid #6B0F1A;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.markdown-body td {
+  padding: 1rem;
+  border: 1px solid #eee;
+  vertical-align: top;
+  color: #4A0A12;
+}
+
+.markdown-body tr:nth-child(even) {
+  background-color: #FDF9F1;
+}
+
+.markdown-body tr:hover {
+  background-color: #F5E6CC;
+}

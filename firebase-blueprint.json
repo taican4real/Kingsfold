@@ -1,0 +1,20 @@
+{
+  "entities": {
+    "users": {
+        "title": "User Profile",
+        "description": "User profile with role-based access control",
+        "type": "object",
+        "properties": {
+            "email": { "type": "string", "format": "email" },
+            "role": { "type": "string", "enum": ["student", "parent", "staff", "admin"] }
+        },
+        "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+        "schema": "users",
+        "description": "Information about users and their roles"
+    }
+  }
+}
