@@ -365,7 +365,7 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
 
 export default function ContactPage() {
   const { data: contact, loading } = useCMS('contact', DEFAULT_CONTACTPAGE);
-  const API_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
+  const API_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || 'AIzaSyA0-sdtOHnesDeqUeZp9cDUnICFzuEkpAI';
   const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
   const schoolLocation = { lat: 6.6872, lng: 3.5648 };
 
