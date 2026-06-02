@@ -23,6 +23,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    
+    // Auto-reload on chunk load error
+    if (error.message.includes("dynamically imported module") || error.name === "ChunkLoadError") {
+      const reloaded = window.sessionStorage.getItem("chunk-load-reloaded");
+      if (!reloaded) {
+        window.sessionStorage.setItem("chunk-load-reloaded", "true");
+        window.location.reload();
+        return;
+      }
+    }
+    
     this.setState({ errorInfo });
   }
 
