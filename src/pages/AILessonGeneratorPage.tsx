@@ -136,6 +136,12 @@ export default function AILessonGeneratorPage() {
         body: JSON.stringify(questionFormData)
       });
       
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textData = await response.text();
+        throw new Error(`Server Error (${response.status}): ${textData.substring(0, 100)}`);
+      }
+      
       const data = await response.json();
       if (!response.ok) {
          throw new Error(data.error || "Failed to generate questions");
@@ -183,6 +189,12 @@ export default function AILessonGeneratorPage() {
         body: JSON.stringify(formData)
       });
       
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textData = await response.text();
+        throw new Error(`Server Error (${response.status}): ${textData.substring(0, 100)}`);
+      }
+      
       const data = await response.json();
       if (!response.ok) {
          throw new Error(data.error || "Failed to generate lesson plan");
@@ -229,6 +241,12 @@ export default function AILessonGeneratorPage() {
           gradeLevel: formData.gradeLevel
         })
       });
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textData = await response.text();
+        throw new Error(`Server Error (${response.status}): ${textData.substring(0, 100)}`);
+      }
       
       const data = await response.json();
       if (!response.ok) {
