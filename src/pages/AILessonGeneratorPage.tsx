@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable';
 import { useAuth } from '../components/AuthProvider';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import SEO from '../components/SEO';
 
 interface FileFormData {
   topic: string;
@@ -556,6 +557,11 @@ export default function AILessonGeneratorPage() {
 
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col items-center">
+      <SEO 
+        title="AI Lesson Study & Assessor Planner"
+        description="Plan and assess your lessons interactively with the modern Kingsfold International Academy AI assistance module."
+        noIndex={true}
+      />
       <div className="w-full bg-wine py-16 px-6 relative overflow-hidden animate-fade-in">
         {user && (
           <button

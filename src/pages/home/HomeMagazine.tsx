@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { HERO_IMAGES } from '../../constants';
+import SEO from '../../components/SEO';
 
 export default function HomeMagazine() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -17,6 +18,11 @@ export default function HomeMagazine() {
 
   return (
     <div className="flex flex-col w-full bg-[#f8f8f8] p-4 md:p-8">
+      <SEO 
+        title="Educational Insights & Magazine Layout"
+        description="Kingsfold International Academy (Magazine Layout) aggregates top academic articles, upcoming school terms, and leadership reports."
+        canonical="https://www.kingsfoldinternationalacademy.com.ng"
+      />
       <div className="max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Main Feature */}
         <motion.div 

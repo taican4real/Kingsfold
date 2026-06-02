@@ -91,7 +91,13 @@ export default function TuitionFeesPage() {
       {/* Main Content */}
       <section className="py-24 px-4 md:px-0">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-white border border-gray-100 shadow-2xl overflow-hidden mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="bg-white border border-gray-100 shadow-2xl overflow-hidden mb-16"
+          >
             <div className="p-8 md:p-12 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8">
               <div>
                 <h2 className="text-3xl font-serif text-wine-dark mb-2">{cmsData.sessionTitle}</h2>
@@ -124,13 +130,13 @@ export default function TuitionFeesPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-
+          </motion.div>
+ 
           {/* Payment Terms */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { 
-                icon: <CreditCard className="text-red" />, 
+                icon: <CreditCard className="text-red animate-pulse" />, 
                 title: cmsData.paymentTerm1Title, 
                 desc: cmsData.paymentTerm1Desc 
               },
@@ -145,13 +151,20 @@ export default function TuitionFeesPage() {
                 desc: cmsData.paymentTerm3Desc 
               },
             ].map((term, idx) => (
-              <div key={idx} className="bg-white p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all group font-sans"
+              >
                 <div className="w-12 h-12 rounded-full bg-cream flex items-center justify-center mb-6 group-hover:bg-wine group-hover:text-white transition-colors">
                   {term.icon}
                 </div>
                 <h4 className="text-lg font-serif text-wine-dark mb-4">{term.title}</h4>
                 <p className="text-sm text-gray-500 leading-relaxed">{term.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
 

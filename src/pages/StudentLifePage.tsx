@@ -63,13 +63,33 @@ export default function StudentLifePage() {
         schema={studentLifeSchema}
       />
       <div className="py-24 md:py-32 bg-wine text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-serif text-white mb-6 uppercase tracking-tighter">{sl.heroTitle}</h1>
-        <p className="text-lg text-cream/80 max-w-2xl mx-auto">{sl.heroSubtitle}</p>
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-7xl font-serif text-white mb-6 uppercase tracking-tighter"
+        >
+          {sl.heroTitle}
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-lg text-cream/80 max-w-2xl mx-auto"
+        >
+          {sl.heroSubtitle}
+        </motion.p>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-4 py-20 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-          <div className="flex flex-col justify-center">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col justify-center"
+          >
             <h2 className="font-serif text-4xl text-wine-dark mb-6">{sl.classroomTitle}</h2>
             <p className="text-gray-dark/80 leading-relaxed mb-6">
               {sl.classroomDesc1}
@@ -77,10 +97,26 @@ export default function StudentLifePage() {
             <p className="text-gray-dark/80 leading-relaxed">
               {sl.classroomDesc2}
             </p>
-          </div>
+          </motion.div>
           <div className="grid grid-cols-2 gap-4">
-            <img src={getDirectDriveLink(sl.classroomImage1) || null} className="w-full h-48 object-cover shadow-xl" alt="Activity 1" />
-            <img src={getDirectDriveLink(sl.classroomImage2) || null} className="w-full h-48 object-cover mt-8 shadow-xl" alt="Activity 2" />
+            <motion.img 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              src={getDirectDriveLink(sl.classroomImage1) || null} 
+              className="w-full h-48 object-cover shadow-xl grayscale hover:grayscale-0 transition-all duration-700 font-sans" 
+              alt="Activity 1" 
+            />
+            <motion.img 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              src={getDirectDriveLink(sl.classroomImage2) || null} 
+              className="w-full h-48 object-cover mt-8 shadow-xl grayscale hover:grayscale-0 transition-all duration-700 font-sans" 
+              alt="Activity 2" 
+            />
           </div>
         </div>
 
@@ -91,11 +127,18 @@ export default function StudentLifePage() {
             { icon: Music, title: sl.activity3Title, desc: sl.activity3Desc },
             { icon: Users, title: sl.activity4Title, desc: sl.activity4Desc },
           ].map((activity, i) => (
-            <div key={i} className="bg-white p-8 border border-gray-100 hover:border-wine/20 transition-all text-center group">
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="bg-white p-8 border border-gray-100 hover:border-wine/20 transition-all text-center group"
+            >
               <activity.icon className="w-10 h-10 text-red mx-auto mb-4 group-hover:scale-110 transition-transform" />
               <h3 className="font-serif text-xl text-wine mb-2">{activity.title}</h3>
               <p className="text-sm text-gray-400">{activity.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 

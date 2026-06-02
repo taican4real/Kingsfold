@@ -33,11 +33,25 @@ export default function GalleryPage() {
 
   const filtered = activeTab === 'All' ? IMAGES : IMAGES.filter(img => img.category === activeTab);
 
+  const gallerySchema = {
+    "@context": "https://schema.org",
+    "@type": "ImageGallery",
+    "name": "Kingsfold International Academy Media Gallery",
+    "description": gallery.heroSubtitle || "A photographic showcase of academic life, campus facilities, sporting events, and student achievements at Kingsfold International Academy.",
+    "publisher": {
+      "@type": "EducationalOrganization",
+      "name": "Kingsfold International Academy",
+      "logo": "https://lh3.googleusercontent.com/d/1iUPYl60tbSKCWv3GSBhjpTyD24GYerhE"
+    }
+  };
+
   return (
     <div className="flex flex-col w-full min-h-screen">
       <SEO 
         title={`${gallery.heroTitle} | Kingsfold Academy`}
         description={gallery.heroSubtitle}
+        keywords="school gallery, school photos, Kingsfold campus images, student life boarding photos, Lagos school environment"
+        schema={gallerySchema}
       />
       <div className="py-24 bg-wine-dark text-center px-4">
         <h1 className="text-5xl md:text-6xl font-serif text-cream mb-4 uppercase">{gallery.heroTitle}</h1>

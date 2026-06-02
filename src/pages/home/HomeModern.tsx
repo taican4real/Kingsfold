@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { HERO_IMAGES } from '../../constants';
+import SEO from '../../components/SEO';
 
 export default function HomeModern() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -17,6 +18,11 @@ export default function HomeModern() {
 
   return (
     <div className="flex flex-col w-full bg-white overflow-hidden">
+      <SEO 
+        title="Modern Dual Curriculum International School in Ikorodu"
+        description="Kingsfold International Academy (Modern Layout) provides exceptional standards of preschool, primary and secondary day & boarding options."
+        canonical="https://www.kingsfoldinternationalacademy.com.ng"
+      />
       {/* Centered Bold Hero */}
       <section className="relative min-h-screen flex items-center justify-center pt-20">
         <div className="absolute inset-0 z-0">

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowRight, BookOpen, Globe, Shield, Award } from 'lucide-react';
 import { cn, getDirectDriveLink } from '../../lib/utils';
 import { HERO_IMAGES } from '../../constants';
+import SEO from '../../components/SEO';
 
 export default function HomeDefault() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -17,6 +18,11 @@ export default function HomeDefault() {
 
   return (
     <div className="flex flex-col w-full overflow-hidden">
+      <SEO 
+        title="Best British International Boarding School in Lagos"
+        description="Kingsfold International Academy (Default Layout) is a premium private boarding school in Ikorodu, Lagos, Nigeria offering high standards of British and Nigerian curricula."
+        canonical="https://www.kingsfoldinternationalacademy.com.ng"
+      />
       {/* Hero Section */}
       <section className="relative h-[85vh] min-h-[600px] w-full flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0" aria-live="polite">

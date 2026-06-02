@@ -147,13 +147,32 @@ export default function AboutPage() {
       />
       {/* Hero Header */}
       <div className="py-24 md:py-32 bg-wine text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-serif text-white mb-6">{content.heroTitle}</h1>
-        <p className="text-lg text-cream/80 max-w-2xl mx-auto">{content.heroSubtitle}</p>
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-7xl font-serif text-white mb-6"
+        >
+          {content.heroTitle}
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-lg text-cream/80 max-w-2xl mx-auto"
+        >
+          {content.heroSubtitle}
+        </motion.p>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-20">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+          >
             <h2 className="text-4xl font-serif text-wine-dark mb-6">{content.historyTitle}</h2>
             <p className="text-gray-dark/80 leading-relaxed mb-4">
               {content.historyContent1}
@@ -161,10 +180,16 @@ export default function AboutPage() {
             <p className="text-gray-dark/80 leading-relaxed">
               {content.historyContent2}
             </p>
-          </div>
-          <div className="aspect-video bg-gray-300">
-            <img src={getDirectDriveLink(content.historyImage) || null} alt="Campus view" className="w-full h-full object-cover" />
-          </div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="aspect-video bg-gray-300 shadow-xl overflow-hidden"
+          >
+            <img src={getDirectDriveLink(content.historyImage) || null} alt="Campus view" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 font-sans" />
+          </motion.div>
         </div>
 
         {/* Vision & Mission Section */}
@@ -271,11 +296,17 @@ export default function AboutPage() {
 
         {/* Core Values Section */}
         <section className="py-24 mb-32">
-          <div className="text-center mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-20"
+          >
             <Heart className="w-12 h-12 text-red mx-auto mb-6" />
             <span className="text-wine text-xs font-bold uppercase tracking-[0.4em] mb-4 block">The Pillars of our Community</span>
             <h2 className="text-4xl md:text-6xl font-serif text-wine">Our Core Values</h2>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
             {[

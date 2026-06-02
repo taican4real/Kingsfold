@@ -8,6 +8,7 @@ interface SEOProps {
   keywords?: string;
   canonical?: string;
   type?: string;
+  image?: string;
   schema?: Record<string, any> | Record<string, any>[];
   noIndex?: boolean;
 }
@@ -18,6 +19,7 @@ export default function SEO({
   keywords, 
   canonical,
   type = "website",
+  image,
   schema,
   noIndex = false
 }: SEOProps) {
@@ -33,6 +35,9 @@ export default function SEO({
   const baseKeywords = "British International School Lagos, Best Boarding School Nigeria, IGCSE School Lagos, Cambridge Curriculum Nigeria, Top Private School Lagos, Kingsfold Academy, Ikorodu school";
   const finalKeywords = keywords ? `${keywords}, ${baseKeywords}` : baseKeywords;
 
+  // Use either the custom image or a general high-quality fallback image for previewing
+  const previewImage = image || "https://lh3.googleusercontent.com/d/1iUPYl60tbSKCWv3GSBhjpTyD24GYerhE";
+
   // Primary EducationalOrganization Schema
   const defaultOrgSchema = {
     "@context": "https://schema.org",
@@ -45,6 +50,16 @@ export default function SEO({
     "description": "Kingsfold International Academy is a premium British-Nigerian private boarding school in Ikorodu, Lagos, offering exceptional academic standards with world-class boarding facilities.",
     "telephone": "+2349095987223",
     "email": "info@kingsfoldinternationalacademy.com.ng",
+    "foundingDate": "2018",
+    "knowsAbout": [
+      "British National Curriculum",
+      "Nigerian National Curriculum",
+      "IGCSE",
+      "WAEC",
+      "NECO",
+      "A-Levels",
+      "Cambridge Assessment International Education"
+    ],
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Plot 1, His Glory Avenue, Legina Bus Stop, Off Itokin Road, Adamo",
@@ -116,8 +131,8 @@ export default function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={finalCanonical} />
       <meta property="og:site_name" content={siteTitle} />
-      <meta property="og:image" content="https://lh3.googleusercontent.com/d/1iUPYl60tbSKCWv3GSBhjpTyD24GYerhE" />
-      <meta property="og:image:secure_url" content="https://lh3.googleusercontent.com/d/1iUPYl60tbSKCWv3GSBhjpTyD24GYerhE" />
+      <meta property="og:image" content={previewImage} />
+      <meta property="og:image:secure_url" content={previewImage} />
       <meta property="og:image:type" content="image/jpeg" />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
@@ -127,7 +142,7 @@ export default function SEO({
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content="https://lh3.googleusercontent.com/d/1iUPYl60tbSKCWv3GSBhjpTyD24GYerhE" />
+      <meta name="twitter:image" content={previewImage} />
       <meta name="twitter:image:alt" content={`${siteTitle} Landmark`} />
       <meta name="twitter:site" content="@kingsfoldacademy" />
 

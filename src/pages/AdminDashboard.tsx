@@ -6,6 +6,7 @@ import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firesto
 import { db } from '../lib/firebase';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../components/AuthProvider';
+import SEO from '../components/SEO';
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
@@ -75,6 +76,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-32 pb-20 px-4 md:px-8">
+      <SEO 
+        title="Admin Control Center" 
+        description="Centralized Administrative Control Dashboard for Kingsfold International Academy."
+        noIndex={true}
+      />
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
           <div>

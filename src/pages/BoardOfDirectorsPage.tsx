@@ -57,11 +57,37 @@ const BoardOfDirectorsPage: React.FC = () => {
   const governanceDesc = boardData?.governanceDesc || DEFAULT_BOARD.governanceDesc;
   const directorsList: Director[] = boardData?.directors || DEFAULT_BOARD.directors;
 
+  const boardSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemPage",
+    "name": "Kingsfold International Academy Board of Directors",
+    "description": "Meet the visionary leadership team and governance board of Kingsfold International Academy.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": directorsList.map((dir, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "item": {
+          "@type": "Person",
+          "name": dir.name,
+          "jobTitle": dir.role,
+          "description": dir.bio || "",
+          "affiliation": {
+            "@type": "EducationalOrganization",
+            "name": "Kingsfold International Academy"
+          }
+        }
+      }))
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <SEO 
-        title="Board of Directors" 
+        title="Board of Directors & Governance" 
         description="Meet the visionary leadership team behind Kingsfold International Academy, dedicated to providing world-class education."
+        keywords="school leadership, board of directors Lagos, Kingsfold governance, academic trustees Nigeria, school founders"
+        schema={boardSchema}
       />
 
       {/* Hero Section */}

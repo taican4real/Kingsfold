@@ -60,18 +60,38 @@ export default function BoardingPage() {
         <div style={{ backgroundImage: `url(${boarding.heroImage})` }} className="absolute inset-0 bg-cover bg-center" />
         <div className="absolute inset-0 bg-wine-dark/80" />
         <div className="relative z-10 max-w-3xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-serif text-cream mb-6">{boarding.heroTitle}</h1>
-          <p className="text-lg text-cream/90">{boarding.heroSubtitle}</p>
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-5xl md:text-7xl font-serif text-cream mb-6 animate-fade-in"
+          >
+            {boarding.heroTitle}
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-lg text-cream/90"
+          >
+            {boarding.heroSubtitle}
+          </motion.p>
         </div>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-4 py-20 w-full">
-        <div className="text-center max-w-3xl mx-auto mb-20">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="text-center max-w-3xl mx-auto mb-20"
+        >
           <h2 className="text-4xl font-serif text-wine-dark mb-6">{boarding.premiumTitle}</h2>
-          <p className="text-gray-dark/80 leading-relaxed">
+          <p className="text-gray-dark/80 leading-relaxed font-sans text-base">
             {boarding.premiumDesc}
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
           {[
@@ -80,11 +100,18 @@ export default function BoardingPage() {
             { icon: HeartPulse, title: boarding.feature3Title, desc: boarding.feature3Desc },
             { icon: ShieldCheck, title: boarding.feature4Title, desc: boarding.feature4Desc }
           ].map((feature, i) => (
-            <div key={i} className="bg-white p-8 border-t-4 border-red shadow-sm transition-all hover:shadow-lg">
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="bg-white p-8 border-t-4 border-red shadow-sm transition-all hover:shadow-lg font-sans"
+            >
               <feature.icon className="w-8 h-8 text-wine mb-4" />
               <h3 className="font-serif text-xl text-wine-dark mb-3">{feature.title}</h3>
-              <p className="text-sm text-gray-400">{feature.desc}</p>
-            </div>
+              <p className="text-sm text-gray-400 leading-relaxed">{feature.desc}</p>
+            </motion.div>
           ))}
         </div>
 

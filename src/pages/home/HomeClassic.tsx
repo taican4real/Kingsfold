@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Award, BookOpen, ScrollText, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { HERO_IMAGES } from '../../constants';
+import SEO from '../../components/SEO';
 
 export default function HomeClassic() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -17,6 +18,11 @@ export default function HomeClassic() {
 
   return (
     <div className="flex flex-col w-full bg-[#fdfcf9] font-serif">
+      <SEO 
+        title="Prestigious British Academic Heritage School in Lagos"
+        description="Kingsfold International Academy (Classic Layout) blends traditional boarding school ethos and classical academic excellence."
+        canonical="https://www.kingsfoldinternationalacademy.com.ng"
+      />
       {/* Traditional Hero */}
       <section className="relative h-[90vh] flex items-center justify-center text-center p-4">
         <div className="absolute inset-0 z-0 text-left" aria-live="polite">

@@ -114,8 +114,22 @@ export default function AcademicsPage() {
         schema={academicsSchema}
       />
       <div className="py-24 md:py-32 bg-wine-dark text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-serif text-cream mb-6">{academics.heroTitle}</h1>
-        <p className="text-lg text-cream/80 max-w-2xl mx-auto">{academics.heroSubtitle}</p>
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-7xl font-serif text-cream mb-6"
+        >
+          {academics.heroTitle}
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-lg text-cream/80 max-w-2xl mx-auto"
+        >
+          {academics.heroSubtitle}
+        </motion.p>
       </div>
 
       <AcademicsAwards />
@@ -186,18 +200,31 @@ export default function AcademicsPage() {
         </motion.div>
 
         {/* Advantage Section */}
-        <div className="mt-32 pt-20 border-t border-wine/5">
-          <div className="text-center mb-16">
+        <div className="mt-32 pt-20 border-t border-wine/5 font-sans">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
             <span className="text-red uppercase tracking-[0.4em] text-[10px] font-bold mb-4 block">{academics.advantageSubtitle}</span>
             <h2 className="text-4xl font-serif text-wine-dark mb-6">{academics.advantageTitle}</h2>
-          </div>
+          </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((num) => (
-              <div key={num} className="p-8 bg-white border border-gray-100 hover:border-wine/20 transition-all text-center">
+            {[1, 2, 3].map((num, idx) => (
+              <motion.div 
+                key={num} 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6, delay: idx * 0.15 }}
+                className="p-8 bg-white border border-gray-100 hover:border-wine/20 hover:shadow-xl transition-all text-center rounded-sm"
+              >
                 <h4 className="font-serif text-xl text-wine-dark mb-4">{(academics as any)[`reason${num}Title`]}</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">{(academics as any)[`reason${num}Desc`]}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

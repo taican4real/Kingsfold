@@ -157,7 +157,13 @@ export default function ScholarshipsPage() {
 
           {/* Process Section */}
           <div className="mt-40 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-            <div className="relative">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
               <div className="absolute -top-10 -left-10 w-40 h-40 bg-wine/5 rounded-full blur-3xl" />
               <img 
                 src="https://images.unsplash.com/photo-1523050338692-7b84940952de?auto=format&fit=crop&q=80&w=1000" 
@@ -168,13 +174,19 @@ export default function ScholarshipsPage() {
                 <span className="text-4xl text-white font-serif block mb-2 underline decoration-red underline-offset-8">250+</span>
                 <span className="text-[10px] uppercase font-bold tracking-widest text-white/60">Scholarships Awarded to Date</span>
               </div>
-            </div>
+            </motion.div>
             
             <div className="space-y-12">
-              <div className="space-y-4">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="space-y-4"
+              >
                 <span className="text-red uppercase tracking-[0.4em] text-[10px] font-bold">The Journey</span>
                 <h2 className="text-4xl md:text-5xl font-serif text-wine-dark leading-tight">{cmsData.processTitle}</h2>
-              </div>
+              </motion.div>
               
               <div className="space-y-10">
                 {[
@@ -183,13 +195,20 @@ export default function ScholarshipsPage() {
                   { step: "03", title: "Evaluation & Interview", desc: "Shortlisted candidates are invited for a specialized assessment and faculty panel interview." },
                   { step: "04", title: "Final Selection", desc: "Grant decisions are communicated alongside the admission offer letter." },
                 ].map((step, idx) => (
-                  <div key={idx} className="flex gap-8 group">
+                  <motion.div 
+                    key={idx} 
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="flex gap-8 group"
+                  >
                     <span className="text-4xl font-serif text-wine italic opacity-20 group-hover:opacity-100 transition-opacity duration-500">{step.step}</span>
                     <div className="space-y-2">
                       <h4 className="text-lg font-serif text-wine-dark">{step.title}</h4>
                       <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>

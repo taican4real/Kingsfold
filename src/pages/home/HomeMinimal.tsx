@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Minus, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HERO_IMAGES } from '../../constants';
 import { cn } from '../../lib/utils';
+import SEO from '../../components/SEO';
 
 export default function HomeMinimal() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -17,6 +18,11 @@ export default function HomeMinimal() {
 
   return (
     <div className="flex flex-col w-full bg-white font-sans selection:bg-black selection:text-white">
+      <SEO 
+        title="Minimalist High Performance Private Education Lagos"
+        description="Kingsfold International Academy (Minimal Layout) centers on modern luxury design paired with clear education standards."
+        canonical="https://www.kingsfoldinternationalacademy.com.ng"
+      />
       {/* Ultra Minimal Hero */}
       <section className="relative min-h-screen flex flex-col justify-end p-12 lg:p-24 bg-gray-50 overflow-hidden">
         <div className="absolute inset-0 z-0" aria-live="polite">

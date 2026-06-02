@@ -4,6 +4,7 @@ import { Save, AlertCircle, Loader, Webhook, Home, Settings, LayoutTemplate, Use
 import { useCMS } from '../hooks/useCMS';
 import { Link } from 'react-router-dom';
 import { getDirectDriveLink } from '../lib/utils';
+import SEO from '../components/SEO';
 
 const DEFAULT_NAVBAR = {
   logoImage: "https://drive.google.com/thumbnail?id=1BasYzGGbqpXgKglJSsBaQ4hZcGkjZg7L&sz=w1000",
@@ -3137,6 +3138,11 @@ export default function CMSWorkspace() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-32 pb-20 px-4 md:px-8">
+      <SEO 
+        title="CMS Workspace" 
+        description="Content Management System Workspace for Kingsfold International Academy admins."
+        noIndex={true}
+      />
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
           <div>
