@@ -5,32 +5,53 @@ import { AuthProvider } from './components/AuthProvider';
 import { ThemeProvider } from './components/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+const lazyWithRetry = (componentImport: () => Promise<any>) =>
+  lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
+
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        // Assume that the error is because of a new deploy and the user has a stale index.html
+        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
+        return window.location.reload();
+      }
+      // The page has already been reloaded, assuming a different error
+      throw error;
+    }
+  });
+
 // Pages - Lazy loaded for performance
-const HomePage = lazy(() => import('./pages/HomePage'));
-const HomeDefault = lazy(() => import('./pages/home/HomeDefault'));
-const HomeModern = lazy(() => import('./pages/home/HomeModern'));
-const HomeClassic = lazy(() => import('./pages/home/HomeClassic'));
-const HomeMinimal = lazy(() => import('./pages/home/HomeMinimal'));
-const HomeMagazine = lazy(() => import('./pages/home/HomeMagazine'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const AcademicsPage = lazy(() => import('./pages/AcademicsPage'));
-const BoardingPage = lazy(() => import('./pages/BoardingPage'));
-const AdmissionsPage = lazy(() => import('./pages/AdmissionsPage'));
-const StudentLifePage = lazy(() => import('./pages/StudentLifePage'));
-const NewsEventsPage = lazy(() => import('./pages/NewsEventsPage'));
-const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const StaffDirectoryPage = lazy(() => import('./pages/StaffDirectoryPage'));
-const TuitionFeesPage = lazy(() => import('./pages/TuitionFeesPage'));
-const ScholarshipsPage = lazy(() => import('./pages/ScholarshipsPage'));
-const PoliciesPage = lazy(() => import('./pages/PoliciesPage'));
-const BoardOfDirectorsPage = lazy(() => import('./pages/BoardOfDirectorsPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const CMSWorkspace = lazy(() => import('./pages/CMSWorkspace'));
-const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
-const PortalPage = lazy(() => import('./pages/PortalPage'));
-const DocumentationPage = lazy(() => import('./pages/DocumentationPage'));
-const AILessonGeneratorPage = lazy(() => import('./pages/AILessonGeneratorPage'));
+const HomePage = lazyWithRetry(() => import('./pages/HomePage'));
+const HomeDefault = lazyWithRetry(() => import('./pages/home/HomeDefault'));
+const HomeModern = lazyWithRetry(() => import('./pages/home/HomeModern'));
+const HomeClassic = lazyWithRetry(() => import('./pages/home/HomeClassic'));
+const HomeMinimal = lazyWithRetry(() => import('./pages/home/HomeMinimal'));
+const HomeMagazine = lazyWithRetry(() => import('./pages/home/HomeMagazine'));
+const AboutPage = lazyWithRetry(() => import('./pages/AboutPage'));
+const AcademicsPage = lazyWithRetry(() => import('./pages/AcademicsPage'));
+const BoardingPage = lazyWithRetry(() => import('./pages/BoardingPage'));
+const AdmissionsPage = lazyWithRetry(() => import('./pages/AdmissionsPage'));
+const StudentLifePage = lazyWithRetry(() => import('./pages/StudentLifePage'));
+const NewsEventsPage = lazyWithRetry(() => import('./pages/NewsEventsPage'));
+const GalleryPage = lazyWithRetry(() => import('./pages/GalleryPage'));
+const ContactPage = lazyWithRetry(() => import('./pages/ContactPage'));
+const StaffDirectoryPage = lazyWithRetry(() => import('./pages/StaffDirectoryPage'));
+const TuitionFeesPage = lazyWithRetry(() => import('./pages/TuitionFeesPage'));
+const ScholarshipsPage = lazyWithRetry(() => import('./pages/ScholarshipsPage'));
+const PoliciesPage = lazyWithRetry(() => import('./pages/PoliciesPage'));
+const BoardOfDirectorsPage = lazyWithRetry(() => import('./pages/BoardOfDirectorsPage'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
+const CMSWorkspace = lazyWithRetry(() => import('./pages/CMSWorkspace'));
+const AdminLoginPage = lazyWithRetry(() => import('./pages/AdminLoginPage'));
+const PortalPage = lazyWithRetry(() => import('./pages/PortalPage'));
+const DocumentationPage = lazyWithRetry(() => import('./pages/DocumentationPage'));
+const AILessonGeneratorPage = lazyWithRetry(() => import('./pages/AILessonGeneratorPage'));
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 
