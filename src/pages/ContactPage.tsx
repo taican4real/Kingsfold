@@ -108,6 +108,79 @@ function RouteRenderer({
   return null;
 }
 
+const mapStyles = [
+  {
+    "elementType": "geometry",
+    "stylers": [{ "color": "#FAF8F5" }]
+  },
+  {
+    "elementType": "labels.icon",
+    "stylers": [{ "visibility": "simplified" }]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#5e524d" }]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{ "color": "#FAF8F5" }]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#bdbdbd" }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#efebe9" }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#6B0F1A" }, { "weight": 0.5 }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#ffffff" }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#f1e4e4" }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [{ "color": "#6B0F1A" }, { "weight": 0.5 }, { "opacity": 0.25 }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#d7ccc8" }]
+  }
+];
+
+const MANUAL_DIRECTIONS: Record<string, { estimate: string; text: string }> = {
+  "Ikorodu Roundabout": {
+    estimate: "15-20 mins (11.2 km)",
+    text: "Head East on Itokin Road (Ikorodu-Epe Expressway) from the Roundabout. Stay on the main road past Sabo market, then past Elepe Bus Stop. Continue straight. Our campus is situated right on the main road at Legina Bus Stop (marked with a prominent Kingsfold International Academy sign) on your left, just 1.5km before Adamo bus stop."
+  },
+  "Ikeja / Maryland": {
+    estimate: "50 mins - 1 hr 15 mins (34.8 km)",
+    text: "Take Ikorodu Road (A1) northbound. Drive straight through Ketu, Mile 12, and cross the Majidun River bridge into Central Ikorodu. At the major roundabout, take the eastern turnoff onto Itokin Road (heading towards Epe). Follow the road past Sabo and Elepe. Legina Bus Stop is on your left, directly bordering the main road."
+  },
+  "Victoria Island": {
+    estimate: "1 hr 10 mins - 1 hr 35 mins (48.3 km)",
+    text: "Cross the Third Mainland Bridge northbound. Take the exit towards Ikorodu Road at Ketu. Follow Ikorodu Road past Ketu, Mile 12, and cross the Majidun bridge into Central Ikorodu. At the prominent Roundabout, take the exit for Itokin-Epe Road. Proceed past Sabo and Elepe to Legina Bus Stop on your left."
+  },
+  "Lekki Phase 1": {
+    estimate: "1 hr 15 mins - 1 hr 40 mins (42.5 km)",
+    text: "Drive eastbound on Lekki-Epe Expressway. Turn left onto the Itokin-Ikorodu Road crossing (past Epe). Head westward along Itokin road past Adamo town center. The Academy layout will appear on your right immediately at Legina Bus Stop."
+  }
+};
+
 function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: number; lng: number } }) {
   const [markerRef, marker] = useAdvancedMarkerRef();
   const [infoWindowOpen, setInfoWindowOpen] = useState(true);
@@ -118,6 +191,7 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
   const [customInput, setCustomInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [calculating, setCalculating] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   // Resilient fallback logic
   const [hasAuthError, setHasAuthError] = useState(false);
@@ -133,14 +207,8 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
       if (originalAuthFailure) originalAuthFailure();
     };
 
-    // A safety timeout: if map doesn't report initialized in 5s, we can offer to switch
-    const timeout = setTimeout(() => {
-      // If we are still loading, it might be blocked
-    }, 5000);
-
     return () => {
       (window as any).gm_authFailure = originalAuthFailure;
-      clearTimeout(timeout);
     };
   }, []);
 
@@ -176,67 +244,11 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
     setInfoWindowOpen(true);
   };
 
-  // If we should use backup map, render a beautiful custom OpenStreetMap panel
-  if (useBackupMap || hasAuthError) {
-    return (
-      <div className="flex flex-col w-full h-full bg-stone-50 border border-[#6B0F1A]/10 rounded-sm overflow-hidden shadow-sm font-sans">
-        {/* Fallback Map HUD */}
-        <div className="bg-[#FAF8F5] border-b border-[#6B0F1A]/10 p-4 space-y-3 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-[9px] bg-red/10 text-red font-bold px-2 py-0.5 rounded-full uppercase tracking-wider block w-fit mb-1">
-                Resilient Map Active
-              </span>
-              <h4 className="font-serif text-sm font-bold text-wine-dark tracking-wide uppercase flex items-center gap-1.5">
-                <Compass className="text-red w-4 h-4" />
-                <span>Interact & Open Directions</span>
-              </h4>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <a 
-                href="https://www.google.com/maps/search/?api=1&query=6.6872,3.5648" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white bg-wine hover:bg-red rounded-sm transition-all flex items-center gap-1 shadow-sm"
-              >
-                <Navigation size={11} />
-                Google Maps App
-              </a>
-              <a 
-                href="https://waze.com/ul?ll=6.6872,3.5648&navigate=yes" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-wine bg-cream hover:bg-wine hover:text-white rounded-sm transition-all flex items-center gap-1 border border-wine/15"
-              >
-                <Car size={11} />
-                Waze App
-              </a>
-            </div>
-          </div>
-          <p className="text-[11px] text-gray-500 leading-relaxed font-sans">
-            Our campus is located at Legina Bus Stop, off Itokin Road, Adamo, Ikorodu. Click buttons above to start global navigation from your device, or drag the interactive fallback map below.
-          </p>
-        </div>
-
-        {/* OSM Map Viewer */}
-        <div className="flex-1 w-full min-h-0 relative">
-          <iframe
-            title="Kingsfold Academy Campus Map Fallback"
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            src="https://www.openstreetmap.org/export/embed.html?bbox=3.5448%2C6.6772%2C3.5748%2C6.6972&amp;layer=mapnik&amp;marker=6.6872%2C3.5648"
-            className="w-full h-full grayscale opacity-90 contrast-105"
-          />
-          <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm border border-neutral-200 px-2.5 py-1.5 rounded text-[10px] text-gray-600 font-sans shadow-sm flex items-center gap-1.5">
-            <Sparkles size={11} className="text-red animate-pulse" />
-            <span>Resilient Map Fallback Engine loaded</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleCopyCoords = () => {
+    navigator.clipboard.writeText("6.6872, 3.5648");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <APIProvider apiKey={apiKey} version="weekly">
@@ -253,10 +265,10 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setUseBackupMap(true)}
-                className="text-[9px] text-gray-500 hover:text-wine font-medium transition-all mr-2"
+                onClick={() => setUseBackupMap(prev => !prev)}
+                className="text-[10px] bg-wine/5 hover:bg-wine/10 text-wine border border-wine/10 px-2.5 py-1 rounded-sm font-bold transition-all uppercase tracking-wider"
               >
-                Switch Map Type
+                {useBackupMap || hasAuthError ? "Show Google Map" : "Fallback Interactive"}
               </button>
               {origin && (
                 <button 
@@ -300,11 +312,11 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
                 placeholder="Type start landmark..."
-                className="text-[10px] text-gray-705 bg-white border border-gray-200 px-2 py-1.5 w-full outline-none focus:border-wine rounded-l-sm"
+                className="text-[10px] text-gray-75 bg-white border border-gray-200 px-2 py-1.5 w-full outline-none focus:border-wine rounded-l-sm"
               />
               <button
                 type="submit"
-                className="bg-wine hover:bg-red text-white py-1.5 px-3 rounded-r-sm transition-all"
+                className="bg-wine hover:bg-red text-white py-1.5 px-3 rounded-r-sm transition-all animate-none"
               >
                 <Search size={12} />
               </button>
@@ -369,90 +381,252 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
           </AnimatePresence>
         </div>
 
-        {/* Map Viewport Area */}
-        <div className="flex-1 min-h-0 relative">
-          <Map
-            defaultCenter={location}
-            defaultZoom={15}
-            mapId="DEMO_MAP_ID"
-            internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
-            style={{ width: '100%', height: '100%' }}
-            gestureHandling={'greedy'}
-            disableDefaultUI={false}
-          >
-            <AdvancedMarker 
-              ref={markerRef} 
-              position={location} 
-              title="Kingsfold International Academy"
-              onClick={() => setInfoWindowOpen(prev => !prev)}
-            >
-              <div 
-                style={{ width: '40px', height: '40px' }} 
-                className="relative flex items-center justify-center cursor-pointer transform hover:scale-105 transition-transform"
-              >
-                <span className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-[#6B0F1A]/30 opacity-75"></span>
-                <div className="relative w-10 h-10 rounded-full bg-[#6B0F1A] flex items-center justify-center shadow-md border-2 border-white">
-                  <School className="text-white w-5 h-5 font-sans" />
+        {/* Map Viewport Area & Companion Panel */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 relative w-full h-full min-h-[460px]">
+          
+          {/* Map Section */}
+          <div className="lg:col-span-8 relative min-h-[350px] lg:min-h-0 w-full h-full">
+            {useBackupMap || hasAuthError ? (
+              <div className="w-full h-full relative">
+                <iframe
+                  title="Kingsfold Academy Campus Map Fallback"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  src="https://www.openstreetmap.org/export/embed.html?bbox=3.5448%2C6.6772%2C3.5748%2C6.6972&amp;layer=mapnik&amp;marker=6.6872%2C3.5648"
+                  className="w-full h-full grayscale opacity-90 contrast-105"
+                />
+                <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm border border-neutral-200 px-2.5 py-1.5 rounded text-[10px] text-gray-600 font-sans shadow-sm flex items-center gap-1.5">
+                  <Sparkles size={11} className="text-red animate-pulse" />
+                  <span>OSM Resilient Engine Loaded</span>
                 </div>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[#6B0F1A]" />
               </div>
-            </AdvancedMarker>
-
-            {infoWindowOpen && (
-              <InfoWindow 
-                anchor={marker} 
-                onCloseClick={() => setInfoWindowOpen(false)}
-                pixelOffset={[0, -5]}
+            ) : (
+              <Map
+                defaultCenter={location}
+                defaultZoom={15}
+                mapId="DEMO_MAP_ID"
+                internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
+                style={{ width: '100%', height: '100%' }}
+                gestureHandling={'greedy'}
+                disableDefaultUI={false}
+                styles={mapStyles}
               >
-                <div className="p-1 px-2 max-w-[210px]">
-                  <h5 className="font-serif text-xs font-bold text-[#6B0F1A] mb-1">Kingsfold International Academy</h5>
-                  <p className="text-[10px] text-gray-600 leading-normal mb-1 bg-neutral-50 p-1 rounded border border-neutral-100">
-                    Plot 1, His Glory Avenue, Legina Bus Stop, Off Itokin Road, Adamo Ikorodu.
-                  </p>
-                  <p className="text-[9px] text-[#22c55e] font-semibold flex items-center gap-1 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-ping" />
-                    <span>Open for Guest Visitations</span>
-                  </p>
+                <AdvancedMarker 
+                  ref={markerRef} 
+                  position={location} 
+                  title="Kingsfold International Academy"
+                  onClick={() => setInfoWindowOpen(prev => !prev)}
+                >
+                  <div 
+                    style={{ width: '40px', height: '40px' }} 
+                    className="relative flex items-center justify-center cursor-pointer transform hover:scale-105 transition-transform"
+                  >
+                    <span className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-[#6B0F1A]/30 opacity-75"></span>
+                    <div className="relative w-10 h-10 rounded-full bg-[#6B0F1A] flex items-center justify-center shadow-md border-2 border-white font-sans">
+                      <School className="text-white w-5 h-5 font-sans" />
+                    </div>
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[#6B0F1A]" />
+                  </div>
+                </AdvancedMarker>
+
+                {infoWindowOpen && (
+                  <InfoWindow 
+                    anchor={marker} 
+                    onCloseClick={() => setInfoWindowOpen(false)}
+                    pixelOffset={[0, -5]}
+                  >
+                    <div className="p-1 px-2 max-w-[210px] font-sans">
+                      <h5 className="font-serif text-xs font-bold text-[#6B0F1A] mb-1">Kingsfold International Academy</h5>
+                      <p className="text-[10px] text-gray-600 leading-normal mb-1 bg-neutral-50 p-1 rounded border border-neutral-100 font-sans">
+                        Plot 1, His Glory Avenue, Legina Bus Stop, Off Itokin Road, Adamo Ikorodu.
+                      </p>
+                      <p className="text-[9px] text-[#22c55e] font-semibold flex items-center gap-1 mt-1 font-sans">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-ping" />
+                        <span>Open for Guest Visitations</span>
+                      </p>
+                    </div>
+                  </InfoWindow>
+                )}
+
+                {origin && (
+                  <RouteRenderer
+                    origin={origin}
+                    destination={location}
+                    travelMode={travelMode}
+                    onRouteComputed={(info) => {
+                      setRouteInfo(info);
+                      setCalculating(false);
+                      setInfoWindowOpen(false);
+                    }}
+                    onError={(msg) => {
+                      setErrorMessage(msg);
+                      setCalculating(false);
+                    }}
+                  />
+                )}
+              </Map>
+            )}
+          </div>
+
+          {/* Elegant Interactive Side Panel for Directions/Steps */}
+          <div className="lg:col-span-4 bg-[#FAF9F6] border-t lg:border-t-0 lg:border-l border-wine/10 p-5 flex flex-col justify-between overflow-y-auto max-h-[500px] w-full h-full">
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-wine/5 pb-2">
+                <h5 className="text-[10px] uppercase font-bold tracking-widest text-[#6B0F1A] flex items-center gap-1.5">
+                  <Compass size={12} className="text-red" />
+                  <span>Route Companion</span>
+                </h5>
+                <span className="text-[9px] text-gray-400 font-mono">
+                  {useBackupMap || hasAuthError ? "manual assist" : "gps live"}
+                </span>
+              </div>
+
+              {/* Calculating Status Indicator */}
+              {calculating && !routeInfo && !errorMessage && (
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-2">
+                  <Loader size={20} className="text-wine animate-spin" />
+                  <p className="text-[10px] text-gray-500 font-medium">Computing live directions...</p>
                 </div>
-              </InfoWindow>
-            )}
+              )}
 
-            {origin && (
-              <RouteRenderer
-                origin={origin}
-                destination={location}
-                travelMode={travelMode}
-                onRouteComputed={(info) => {
-                  setRouteInfo(info);
-                  setCalculating(false);
-                  setInfoWindowOpen(false);
-                }}
-                onError={(msg) => {
-                  setErrorMessage(msg);
-                  setCalculating(false);
-                }}
-              />
-            )}
-          </Map>
+              {/* Live Google Maps Steps */}
+              {!useBackupMap && !hasAuthError && routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && !calculating && (
+                <div className="space-y-3">
+                  <div className="bg-[#6B0F1A]/5 p-2 rounded border border-[#6B0F1A]/10 text-center">
+                    <p className="text-[10px] text-[#6B0F1A] font-bold uppercase tracking-wider">Estimated Trip Time</p>
+                    <div className="flex justify-center items-baseline gap-2 mt-1">
+                      <span className="text-lg font-serif font-extrabold text-wine-dark">{routeInfo.duration}</span>
+                      <span className="text-xs text-gray-400">({routeInfo.distance})</span>
+                    </div>
+                  </div>
 
-          {/* Travel Steps Side Overlay */}
-          {routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="absolute right-3 top-3 bg-white/95 backdrop-blur-sm shadow-lg max-w-[220px] border border-gray-150 p-3 rounded-md z-10 max-h-[160px] overflow-y-auto"
-            >
-              <h6 className="text-[9px] uppercase font-bold tracking-wider text-wine mb-2 flex items-center gap-1 border-b pb-1">
-                <Navigation size={10} />
-                <span>Router Step Guide</span>
-              </h6>
-              <ol className="text-[9px] text-gray-600 space-y-1 ml-3 list-decimal font-sans leading-relaxed">
-                {routeInfo.steps.map((step, idx) => (
-                  <li key={idx} dangerouslySetInnerHTML={{ __html: step }} />
-                ))}
-              </ol>
-            </motion.div>
-          )}
+                  <div className="space-y-2">
+                    <span className="text-[9px] uppercase font-bold text-gray-400 block tracking-wider">Step-by-Step Directions</span>
+                    <ol className="text-[11px] text-gray-700 space-y-2.5 list-none pl-0 font-sans">
+                      {routeInfo.steps.map((step, idx) => (
+                        <li key={idx} className="flex gap-2.5 items-start">
+                          <span className="w-5 h-5 rounded-full bg-cream flex items-center justify-center text-[9px] font-bold text-wine shrink-0 shadow-xs transition-all select-none">
+                            {idx + 1}
+                          </span>
+                          <span className="leading-relaxed" dangerouslySetInnerHTML={{ __html: step }} />
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </div>
+              )}
+
+              {/* Fallback Manual Guide */}
+              {(useBackupMap || hasAuthError) && originName && !calculating && (
+                <div className="space-y-3 font-sans">
+                  <div className="bg-[#6B0F1A]/5 p-2.5 rounded border border-[#6B0F1A]/10 text-center">
+                    <p className="text-[10px] text-[#6B0F1A] font-bold uppercase tracking-wider">Manual Estimate</p>
+                    <div className="flex justify-center items-baseline gap-1.5 mt-1">
+                      <span className="text-xs font-bold text-wine-dark">
+                        {MANUAL_DIRECTIONS[originName]?.estimate || "Local area profile"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1">
+                      <Sparkles size={11} className="text-red" />
+                      <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Campus Routing Instructions</span>
+                    </div>
+                    <p className="text-[11px] text-gray-700 leading-relaxed bg-white p-3 rounded-sm border border-neutral-150 shadow-xs whitespace-pre-line">
+                      {MANUAL_DIRECTIONS[originName]?.text || 
+                       `To drive to Kingsfold Academy from ${originName}, align your journey with Itokin Road (Epe Expressway). Our pristine campus is situated precisely at Legina Bus Stop (marked with a prominent Kingsfold signboard) on your left if heading East, or on your right if driving West from Adamo.`}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Welcome Screen / Coords copy block */}
+              {!origin && !calculating && (
+                <div className="space-y-4 py-4">
+                  <div className="bg-cream-light/60 border border-[#6B0F1A]/5 p-3.5 rounded-sm">
+                    <h6 className="font-serif text-xs font-bold text-wine-dark mb-1 flex items-center gap-1.5">
+                      <School size={13} className="text-red" />
+                      <span>Welcome Visitor</span>
+                    </h6>
+                    <p className="text-[11px] text-gray-500 leading-relaxed font-sans">
+                      Select a landmark or starting point above to dynamically compile routes, distances, and precise geographic step-by-step directions to the school gate.
+                    </p>
+                  </div>
+
+                  <div className="text-left space-y-2 bg-white p-3 border border-neutral-100 rounded shadow-xs">
+                    <div className="flex items-center justify-between border-b pb-1.5">
+                      <span className="text-[9px] text-gray-400 uppercase font-mono">Campus GPS Location</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyCoords}
+                        className="text-[9px] font-bold text-wine hover:underline uppercase tracking-wide cursor-pointer focus:outline-none"
+                      >
+                        {copied ? "Copied ✓" : "Copy Coords"}
+                      </button>
+                    </div>
+                    <p className="text-[11px] font-mono text-gray-650 flex items-center justify-between">
+                      <span>Latitude:</span>
+                      <span className="font-semibold text-stone-850">6.6872° N</span>
+                    </p>
+                    <p className="text-[11px] font-mono text-gray-650 flex items-center justify-between">
+                      <span>Longitude:</span>
+                      <span className="font-semibold text-stone-850">3.5648° E</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Routing Error Fallback options */}
+              {errorMessage && !calculating && (
+                <div className="p-3 bg-red/5 border border-red/10 rounded-sm text-center font-sans">
+                  <p className="text-[11px] text-red font-medium leading-relaxed">{errorMessage}</p>
+                  <button
+                    onClick={() => {
+                      setUseBackupMap(true);
+                      setErrorMessage('');
+                    }}
+                    type="button"
+                    className="mt-2 text-[10px] text-wine font-bold uppercase tracking-wider hover:underline"
+                  >
+                    Use Fallback Interactive Map
+                  </button>
+                </div>
+              )}
+
+            </div>
+
+            {/* Quick Launch Mobile Navigation */}
+            <div className="pt-4 border-t border-neutral-150 mt-4 flex items-center justify-between gap-2 shrink-0">
+              <span className="text-[9px] text-gray-400 leading-tight block font-medium max-w-[140px]">
+                Launch directly in your mobile navigator:
+              </span>
+              <div className="flex gap-1.5 shrink-0">
+                <a 
+                  href="https://www.google.com/maps/search/?api=1&query=6.6872,3.5648" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white bg-wine hover:bg-red rounded-xs transition-all flex items-center gap-1 shadow-sm font-sans"
+                >
+                  <Navigation size={10} />
+                  Google Maps
+                </a>
+                <a 
+                  href="https://waze.com/ul?ll=6.6872,3.5648&navigate=yes" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-wine bg-cream hover:bg-wine hover:text-white rounded-xs transition-all flex items-center gap-0.5 border border-wine/15 font-sans"
+                >
+                  <Car size={10} />
+                  Waze
+                </a>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
     </APIProvider>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Eye, Compass, Heart, Play, Pause, Map, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, ShieldCheck, Globe, BookOpen, Lightbulb, Activity, Award } from 'lucide-react';
 import { cn, getDirectDriveLink } from '../lib/utils';
@@ -112,6 +112,55 @@ export default function AboutPage() {
   const [zoom, setZoom] = useState(1);
   const [currentSection, setCurrentSection] = useState(0);
 
+  const [activeId, setActiveId] = useState('history');
+
+  const sidebarItems = [
+    { id: 'history', label: 'Our History' },
+    { id: 'vision-mission', label: 'Vision & Mission' },
+    { id: 'philosophy', label: 'Our Philosophy' },
+    { id: 'values', label: 'Core Values' },
+    { id: 'principal', label: "Principal's Message" },
+    { id: 'distinction', label: 'Why Choose Us' },
+    { id: 'tour', label: 'Virtual Tour' },
+    { id: 'leadership', label: 'Our Leadership' },
+  ];
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const sectionIds = ['history', 'vision-mission', 'philosophy', 'values', 'principal', 'distinction', 'tour', 'leadership'];
+    const observers = sectionIds.map(id => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveId(id);
+          }
+        },
+        {
+          rootMargin: '-25% 0px -55% 0px'
+        }
+      );
+      observer.observe(el);
+      return { el, observer };
+    });
+
+    return () => {
+      observers.forEach(item => {
+        if (item) {
+          item.observer.unobserve(item.el);
+        }
+      });
+    };
+  }, []);
+
   const tourSections = [
     { name: content.tourPoint1Name, img: content.tourPoint1Img },
     { name: content.tourPoint2Name, img: content.tourPoint2Img },
@@ -165,8 +214,49 @@ export default function AboutPage() {
         </motion.p>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-20">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-20 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          
+          {/* Sticky Sidebar */}
+          <aside className="hidden lg:block lg:col-span-3 sticky top-32 h-fit pr-8 border-r border-[#6B0F1A]/5 self-start space-y-4">
+            <p className="text-[10px] uppercase font-bold text-red tracking-[0.2em] mb-4">Inside Academy</p>
+            <div className="relative flex flex-col gap-2">
+              {sidebarItems.map((item) => {
+                const isActive = activeId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => scrollTo(item.id)}
+                    className={cn(
+                      "relative pr-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer select-none outline-none",
+                      isActive ? "text-wine font-extrabold" : "text-gray-400 hover:text-wine-dark"
+                    )}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="about-sidebar-indicator"
+                        className="absolute right-[-1px] top-1 bottom-1 w-[3px] bg-wine rounded-l-md"
+                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="pt-6 border-t border-[#6B0F1A]/5 mt-6">
+              <span className="text-[9px] text-gray-400 block font-medium leading-relaxed">
+                Scroll to explore our values, campus tour, and executive management.
+              </span>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <div className="col-span-1 lg:col-span-9 space-y-32">
+            <section id="history" className="scroll-mt-32">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-20">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -191,9 +281,10 @@ export default function AboutPage() {
             <img src={getDirectDriveLink(content.historyImage) || null} alt="Campus view" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 font-sans" />
           </motion.div>
         </div>
+      </section>
 
-        {/* Vision & Mission Section */}
-        <section className="py-24 border-b border-gray-100 -mx-4 md:-mx-12 px-4 md:px-12 mb-24">
+      {/* Vision & Mission Section */}
+      <section id="vision-mission" className="py-24 border-b border-gray-100 mb-24 scroll-mt-32">
           <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
@@ -258,7 +349,7 @@ export default function AboutPage() {
         </section>
 
         {/* Our Philosophy - Highlight Section */}
-        <section className="py-32 relative overflow-hidden -mx-4 md:-mx-12 px-4 md:px-12 mb-32 bg-wine-dark">
+        <section id="philosophy" className="py-24 relative overflow-hidden mb-32 bg-wine-dark rounded-sm scroll-mt-32">
           <div className="absolute inset-0 opacity-10">
              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&q=80&w=2000" alt="Background" className="w-full h-full object-cover" />
           </div>
@@ -295,7 +386,7 @@ export default function AboutPage() {
         </section>
 
         {/* Core Values Section */}
-        <section className="py-24 mb-32">
+        <section id="values" className="py-24 mb-32 scroll-mt-32">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -335,7 +426,7 @@ export default function AboutPage() {
         </section>
 
         {/* Principal's Message Section */}
-        <section className="py-24 bg-white border-y border-gray-100 -mx-4 md:-mx-12 px-4 md:px-12 mb-24">
+        <section id="principal" className="py-24 bg-white border-y border-gray-100 mb-24 scroll-mt-32">
           <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 items-center">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
@@ -388,7 +479,7 @@ export default function AboutPage() {
         </section>
 
         {/* Why Kingsfold Section */}
-        <section className="py-24 bg-cream relative overflow-hidden -mx-4 md:-mx-12 px-4 md:px-12 mb-32">
+        <section id="distinction" className="py-24 bg-cream relative overflow-hidden mb-32 rounded-sm scroll-mt-32">
           <div className="absolute top-0 right-0 w-64 h-64 bg-wine/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           
           <div className="max-w-[1400px] mx-auto relative z-10 flex flex-col lg:flex-row gap-16">
@@ -427,7 +518,7 @@ export default function AboutPage() {
         </section>
 
         {/* Virtual Tour Section */}
-        <section className="mb-32">
+        <section id="tour" className="mb-32 scroll-mt-32">
           <div className="text-center mb-16">
             <span className="text-red uppercase tracking-[0.4em] text-[10px] font-bold mb-4 block">Interactive Experience</span>
             <h2 className="text-4xl md:text-5xl font-serif text-wine-dark mb-6">{content.tourTitle}</h2>
@@ -572,7 +663,7 @@ export default function AboutPage() {
         </section>
 
         {/* Leadership */}
-        <div>
+        <section id="leadership" className="scroll-mt-32">
           <h2 className="text-4xl font-serif text-wine-dark text-center mb-12">Our Leadership</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -594,9 +685,11 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </div>
+  </div>
+</div>
   );
 }
 

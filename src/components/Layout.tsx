@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import AnnouncementPopup from './AnnouncementPopup';
@@ -25,8 +26,19 @@ export default function Layout() {
       </a>
       <Navbar />
       <AnnouncementPopup />
-      <main id="main-content" className="flex-1 relative z-10" tabIndex={-1}>
-        <Outlet />
+      <main id="main-content" className="flex-1 relative z-10 overflow-hidden" tabIndex={-1}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="w-full h-full flex flex-col flex-1"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
       <Chatbot />
       <BackToTop />
