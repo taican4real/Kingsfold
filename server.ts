@@ -179,7 +179,7 @@ async function startServer() {
   });
 
   // API Route for Assessment Questions Generation
-  app.post("/api/generate-questions", async (req, res) => {
+  app.post("/api/create-assessments", async (req, res) => {
     const genAI = getGenAI();
     if (!genAI) return res.status(500).json({ error: "Gemini API key is not configured." });
 

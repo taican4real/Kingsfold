@@ -130,7 +130,7 @@ export default function AILessonGeneratorPage() {
     setQuestionsData(null);
 
     try {
-      const response = await fetch('/api/generate-questions', {
+      const response = await fetch('/api/create-assessments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(questionFormData)
