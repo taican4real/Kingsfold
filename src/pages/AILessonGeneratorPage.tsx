@@ -142,11 +142,11 @@ export default function AILessonGeneratorPage() {
       }
 
       let jsonStr = data.content;
-      if (jsonStr.startsWith('```json')) {
-        jsonStr = jsonStr.replace(/```json\n/g, '').replace(/```\n*$/g, '');
-      } else if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/```\n/g, '').replace(/```\n*$/g, '');
+      const match = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (match) {
+        jsonStr = match[1];
       }
+      jsonStr = jsonStr.trim();
       
       try {
         const parsed = JSON.parse(jsonStr);
@@ -192,11 +192,11 @@ export default function AILessonGeneratorPage() {
       
       // Attempt to parse JSON. Gemini might output Markdown blocks.
       let jsonStr = data.content;
-      if (jsonStr.startsWith('```json')) {
-        jsonStr = jsonStr.replace(/```json\n/g, '').replace(/```\n*$/g, '');
-      } else if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/```\n/g, '').replace(/```\n*$/g, '');
+      const match = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (match) {
+        jsonStr = match[1];
       }
+      jsonStr = jsonStr.trim();
       
       try {
         const parsed = JSON.parse(jsonStr);
@@ -236,11 +236,11 @@ export default function AILessonGeneratorPage() {
       }
 
       let jsonStr = data.content;
-      if (jsonStr.startsWith('```json')) {
-        jsonStr = jsonStr.replace(/```json\n/g, '').replace(/```\n*$/g, '');
-      } else if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/```\n/g, '').replace(/```\n*$/g, '');
+      const match = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (match) {
+        jsonStr = match[1];
       }
+      jsonStr = jsonStr.trim();
       
       try {
         const parsed = JSON.parse(jsonStr);
