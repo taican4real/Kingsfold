@@ -118,6 +118,31 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
   const [customInput, setCustomInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [calculating, setCalculating] = useState(false);
+  
+  // Resilient fallback logic
+  const [hasAuthError, setHasAuthError] = useState(false);
+  const [useBackupMap, setUseBackupMap] = useState(false);
+
+  useEffect(() => {
+    // Standard Google Maps authorization failure hook
+    const originalAuthFailure = (window as any).gm_authFailure;
+    (window as any).gm_authFailure = () => {
+      console.warn("Google Maps Auth failed. Switching to lightweight fallback map.");
+      setHasAuthError(true);
+      setUseBackupMap(true);
+      if (originalAuthFailure) originalAuthFailure();
+    };
+
+    // A safety timeout: if map doesn't report initialized in 5s, we can offer to switch
+    const timeout = setTimeout(() => {
+      // If we are still loading, it might be blocked
+    }, 5000);
+
+    return () => {
+      (window as any).gm_authFailure = originalAuthFailure;
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const PRESETS = [
     { name: "Ikorodu Roundabout", coords: { lat: 6.6186, lng: 3.5115 }, desc: "Leaving Central Ikorodu" },
@@ -151,6 +176,68 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
     setInfoWindowOpen(true);
   };
 
+  // If we should use backup map, render a beautiful custom OpenStreetMap panel
+  if (useBackupMap || hasAuthError) {
+    return (
+      <div className="flex flex-col w-full h-full bg-stone-50 border border-[#6B0F1A]/10 rounded-sm overflow-hidden shadow-sm font-sans">
+        {/* Fallback Map HUD */}
+        <div className="bg-[#FAF8F5] border-b border-[#6B0F1A]/10 p-4 space-y-3 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="text-[9px] bg-red/10 text-red font-bold px-2 py-0.5 rounded-full uppercase tracking-wider block w-fit mb-1">
+                Resilient Map Active
+              </span>
+              <h4 className="font-serif text-sm font-bold text-wine-dark tracking-wide uppercase flex items-center gap-1.5">
+                <Compass className="text-red w-4 h-4" />
+                <span>Interact & Open Directions</span>
+              </h4>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <a 
+                href="https://www.google.com/maps/search/?api=1&query=6.6872,3.5648" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white bg-wine hover:bg-red rounded-sm transition-all flex items-center gap-1 shadow-sm"
+              >
+                <Navigation size={11} />
+                Google Maps App
+              </a>
+              <a 
+                href="https://waze.com/ul?ll=6.6872,3.5648&navigate=yes" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-wine bg-cream hover:bg-wine hover:text-white rounded-sm transition-all flex items-center gap-1 border border-wine/15"
+              >
+                <Car size={11} />
+                Waze App
+              </a>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-500 leading-relaxed font-sans">
+            Our campus is located at Legina Bus Stop, off Itokin Road, Adamo, Ikorodu. Click buttons above to start global navigation from your device, or drag the interactive fallback map below.
+          </p>
+        </div>
+
+        {/* OSM Map Viewer */}
+        <div className="flex-1 w-full min-h-0 relative">
+          <iframe
+            title="Kingsfold Academy Campus Map Fallback"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            src="https://www.openstreetmap.org/export/embed.html?bbox=3.5448%2C6.6772%2C3.5748%2C6.6972&amp;layer=mapnik&amp;marker=6.6872%2C3.5648"
+            className="w-full h-full grayscale opacity-90 contrast-105"
+          />
+          <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm border border-neutral-200 px-2.5 py-1.5 rounded text-[10px] text-gray-600 font-sans shadow-sm flex items-center gap-1.5">
+            <Sparkles size={11} className="text-red animate-pulse" />
+            <span>Resilient Map Fallback Engine loaded</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <APIProvider apiKey={apiKey} version="weekly">
       <div className="flex flex-col w-full h-full bg-white border border-[#6B0F1A]/10 rounded-sm overflow-hidden shadow-sm font-sans">
@@ -163,15 +250,24 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
               <span>Visitor Directions & Router</span>
             </h4>
             
-            {origin && (
-              <button 
-                onClick={handleClearRoute}
-                className="text-[10px] text-red font-bold uppercase tracking-wider hover:underline flex items-center gap-1"
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setUseBackupMap(true)}
+                className="text-[9px] text-gray-500 hover:text-wine font-medium transition-all mr-2"
               >
-                <RefreshCw size={10} />
-                <span>Reset Map</span>
+                Switch Map Type
               </button>
-            )}
+              {origin && (
+                <button 
+                  onClick={handleClearRoute}
+                  className="text-[10px] text-red font-bold uppercase tracking-wider hover:underline flex items-center gap-1"
+                >
+                  <RefreshCw size={10} />
+                  <span>Reset Map</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
@@ -278,7 +374,7 @@ function SchoolMap({ apiKey, location }: { apiKey: string; location: { lat: numb
           <Map
             defaultCenter={location}
             defaultZoom={15}
-            mapId="KINGSFOLD_MAP_ID"
+            mapId="DEMO_MAP_ID"
             internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
             style={{ width: '100%', height: '100%' }}
             gestureHandling={'greedy'}
