@@ -4,7 +4,26 @@ import App from './App.tsx';
 import './index.css';
 
 import { HelmetProvider } from 'react-helmet-async';
-import * as serviceWorker from './registerServiceWorker';
+
+// Unregister any active service workers to resolve API/cookie conflicts in the sandbox environment
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister().then((success) => {
+        if (success) console.log('[Service Worker] Unregistered stale SW successfully.');
+      });
+    }
+  }).catch(err => console.error('[Service Worker] Error during unreg:', err));
+
+  // Clear all caches to purge stale HTML responses for API routes
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      for (const name of names) {
+        caches.delete(name).catch(() => {});
+      }
+    }).catch(() => {});
+  }
+}
 
 // Suppress Firestore connection backend warnings in sandbox/offline mode
 if (typeof window !== 'undefined') {
@@ -45,6 +64,4 @@ createRoot(document.getElementById('root')!).render(
     </HelmetProvider>
   </StrictMode>,
 );
-
-serviceWorker.register();
 

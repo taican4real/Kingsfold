@@ -75,6 +75,11 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // Immediately bypass the service worker for all API requests
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
   // Skip non-GET requests (e.g., POST contact forms, CMS updates)
   if (request.method !== 'GET') {
     return;

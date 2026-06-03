@@ -23,17 +23,85 @@ function getGenAI() {
   });
 }
 
-async function callGeminiWithRetry(genAI: any, params: any, retries = 3) {
+let isPrimaryModelOverloaded = false;
+let overloadedTimer: NodeJS.Timeout | null = null;
+
+function markPrimaryModelOverloaded() {
+  if (!isPrimaryModelOverloaded) {
+    isPrimaryModelOverloaded = true;
+    console.log("[Gemini Status] Primary model gemini-3.5-flash is temporarily busy. Activating proactive route optimization to use fallback models.");
+  }
+  if (overloadedTimer) {
+    clearTimeout(overloadedTimer);
+  }
+  // Cooldown period: check primary model status after 3 minutes
+  overloadedTimer = setTimeout(() => {
+    isPrimaryModelOverloaded = false;
+    console.log("[Gemini Status] Cooldown expired. Restoring key primary route gemini-3.5-flash.");
+  }, 3 * 60 * 1000);
+}
+
+async function callGeminiWithRetry(genAI: any, params: any, retries = 5) {
   let attempt = 0;
+  const originalModel = params.model;
+  
+  // Decide the starting model based on past route performance
+  let currentModel = originalModel;
+  if (originalModel === "gemini-3.5-flash" && isPrimaryModelOverloaded) {
+    currentModel = "gemini-3.1-flash-lite";
+  }
+
   while (attempt < retries) {
     try {
-      return await genAI.models.generateContent(params);
+      // Dynamic fallback updates for retry paths
+      if (originalModel === "gemini-3.5-flash") {
+        if (attempt === 1) {
+          currentModel = "gemini-3.1-flash-lite";
+        } else if (attempt === 2) {
+          currentModel = "gemini-flash-latest";
+        } else if (attempt >= 3) {
+          currentModel = attempt % 2 === 1 ? "gemini-3.1-flash-lite" : "gemini-flash-latest";
+        }
+      }
+      
+      const callParams = {
+        ...params,
+        model: currentModel
+      };
+      return await genAI.models.generateContent(callParams);
     } catch (err: any) {
-      if (err?.status === 503 || err?.message?.includes("503") || err?.message?.includes("High demand")) {
+      const errString = String(err?.message || err?.toString() || "").toLowerCase();
+      const status = Number(err?.status || err?.statusCode || 0);
+      
+      const isTransient = 
+        status === 503 || 
+        status === 429 || 
+        status === 500 ||
+        errString.includes("503") || 
+        errString.includes("429") || 
+        errString.includes("500") ||
+        errString.includes("high demand") || 
+        errString.includes("overloaded") || 
+        errString.includes("service unavailable") || 
+        errString.includes("resource exhausted") || 
+        errString.includes("resourceexhausted") || 
+        errString.includes("too many requests") ||
+        errString.includes("rate limit") ||
+        errString.includes("temporary");
+
+      if (isTransient) {
+        // If the overloading occurred on gemini-3.5-flash, isolate it immediately to protect subsequent requests
+        if (currentModel === "gemini-3.5-flash") {
+          markPrimaryModelOverloaded();
+        }
+
         attempt++;
         if (attempt >= retries) throw err;
-        console.log(`Gemini 503 error, retrying ${attempt}/${retries}...`);
-        await new Promise(r => setTimeout(r, 2000 * attempt));
+        
+        // Exponential backoff with random jitter (increases delay on subsequent retries)
+        const delay = Math.pow(2, attempt) * 1000 + Math.floor(Math.random() * 1000);
+        console.log(`[Gemini Status] Model ${currentModel} busy (Status: ${status}). Executing retry ${attempt}/${retries} in ${delay}ms...`);
+        await new Promise(r => setTimeout(r, delay));
       } else {
         throw err;
       }
@@ -41,9 +109,60 @@ async function callGeminiWithRetry(genAI: any, params: any, retries = 3) {
   }
 }
 
+function handleGeminiError(error: any, defaultMsg: string): string {
+  try {
+    const errorString = JSON.stringify(error) || "";
+    const errorMessageStr = error?.message || "";
+    const errorStatus = String(error?.status || error?.statusCode || "");
+    const combined = `${errorString} ${errorMessageStr} ${errorStatus} ${error?.toString() || ""}`.toLowerCase();
+    
+    if (
+      combined.includes("leaked") || 
+      combined.includes("compromised") || 
+      combined.includes("403") || 
+      combined.includes("permission_denied")
+    ) {
+      return "Your Gemini API Key has been reported as leaked or compromised by Google AI Studio. Please go to AI Studio Settings > Secrets and generate/update a new GEMINI_API_KEY.";
+    }
+
+    if (
+      combined.includes("503") ||
+      combined.includes("429") ||
+      combined.includes("high demand") ||
+      combined.includes("overloaded") ||
+      combined.includes("service unavailable") ||
+      combined.includes("resourceexhausted") ||
+      combined.includes("resource exhausted") ||
+      combined.includes("too many requests")
+    ) {
+      return "The Gemini service is currently experiencing extremely high demand. Please wait a few moments and click generate/send again.";
+    }
+  } catch (e) {
+    // fallback to string match if stringify fails
+  }
+  
+  const errMsg = String(error?.message || error?.toString() || "").toLowerCase();
+  if (errMsg.includes("leaked") || errMsg.includes("compromised") || errMsg.includes("403") || errMsg.includes("permission_denied")) {
+    return "Your Gemini API Key has been reported as leaked or compromised by Google AI Studio. Please go to AI Studio Settings > Secrets and generate/update a new GEMINI_API_KEY.";
+  }
+  if (
+    errMsg.includes("503") ||
+    errMsg.includes("429") ||
+    errMsg.includes("high demand") ||
+    errMsg.includes("overloaded") ||
+    errMsg.includes("service unavailable") ||
+    errMsg.includes("resourceexhausted") ||
+    errMsg.includes("resource exhausted") ||
+    errMsg.includes("too many requests")
+  ) {
+    return "The Gemini service is currently experiencing extremely high demand. Please wait a few moments and click generate/send again.";
+  }
+  return defaultMsg;
+}
+
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   // JSON parsing
   app.use(express.json());
@@ -59,7 +178,7 @@ async function startServer() {
     }
 
     try {
-      const { topic, gradeLevel, subject, duration, learningObjectives, additionalContext } = req.body;
+      const { topic, gradeLevel, subject, duration, learningObjectives, additionalContext, term, session } = req.body;
 
       const prompt = `
         You are an expert curriculum developer for Kingsfold International Academy, a world-class preparatory school. 
@@ -69,6 +188,8 @@ async function startServer() {
         Subject: ${subject}
         Grade Level: ${gradeLevel}
         Duration: ${duration}
+        Term: ${term || '1st Term'}
+        Session: ${session || '2025/2026 Academic Session'}
         Proposed Learning Objectives: ${learningObjectives || 'None provided. Please generate suitable SMART objectives for this topic and grade level.'}
         Additional Context/Requirements: ${additionalContext || 'None'}
 
@@ -77,8 +198,8 @@ async function startServer() {
         {
           "header": {
             "subject": "${subject}",
-            "term": "Current Term",
-            "session": "2023/2024 Academic Session",
+            "term": "${term || '1st Term'}",
+            "session": "${session || '2025/2026 Academic Session'}",
             "teacher": "Kingsfold Faculty"
           },
           "grid": {
@@ -102,7 +223,7 @@ async function startServer() {
 
       // Use the model
       const response = await callGeminiWithRetry(genAI, {
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -115,9 +236,9 @@ async function startServer() {
       }
       
       res.json({ content: text });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gemini API Error:", error);
-      res.status(500).json({ error: "Failed to generate lesson plan. Please try again." });
+      res.status(500).json({ error: handleGeminiError(error, "Failed to generate lesson plan. Please try again.") });
     }
   });
 
@@ -161,7 +282,7 @@ async function startServer() {
       `;
 
       const response = await callGeminiWithRetry(genAI, {
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -172,9 +293,9 @@ async function startServer() {
       if (!text) throw new Error("Empty response");
 
       res.json({ content: text });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gemini Note Error:", error);
-      res.status(500).json({ error: "Failed to generate lesson note." });
+      res.status(500).json({ error: handleGeminiError(error, "Failed to generate lesson note.") });
     }
   });
 
@@ -232,7 +353,7 @@ async function startServer() {
       `;
 
       const response = await callGeminiWithRetry(genAI, {
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -243,9 +364,9 @@ async function startServer() {
       if (!text) throw new Error("Empty response from AI");
 
       res.json({ content: text });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gemini Questions generation Error:", error);
-      res.status(500).json({ error: "Failed to generate assessment questions. Please try again." });
+      res.status(500).json({ error: handleGeminiError(error, "Failed to generate assessment questions. Please try again.") });
     }
   });
 
@@ -397,7 +518,7 @@ async function startServer() {
       });
 
       const response = await callGeminiWithRetry(genAI, {
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: contents,
         config: {
           systemInstruction: systemInstruction,
@@ -411,9 +532,9 @@ async function startServer() {
       if (!text) throw new Error("Empty response from AI");
 
       res.json({ response: text });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chatbot Error:", error);
-      res.status(500).json({ error: "I'm having a little trouble connecting right now. Please try again or contact us directly." });
+      res.status(500).json({ error: handleGeminiError(error, "I'm having a little trouble connecting right now. Please try again or contact us directly.") });
     }
   });
 
@@ -443,6 +564,14 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // Catch-all for unmatched API routes to prevent falling back to return index.html webpage
+  app.all("/api/*", (req, res) => {
+    console.error(`[API Server 404] Unhandled route/method on: ${req.method} ${req.url}`);
+    res.status(404).json({
+      error: `API endpoint not found: ${req.method} ${req.url}. Please verify registration or call method.`
+    });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
@@ -470,8 +599,16 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server successfully started and listening on http://localhost:${PORT}`);
+  });
+
+  server.on("error", (err: any) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`🔴 Critical Port Conflict: Port ${PORT} is already in use by a stale process.`);
+    } else {
+      console.error("🔴 Server listen error encountered:", err);
+    }
   });
 }
 

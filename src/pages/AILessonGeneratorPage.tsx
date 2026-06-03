@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, Brain, Download, Loader2, PlayCircle, Sparkles, Send, LogOut } from 'lucide-react';
+import { BookOpen, Brain, Download, Loader2, PlayCircle, Sparkles, Send, LogOut, History, Trash2, Plus } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -14,8 +14,19 @@ interface FileFormData {
   subject: string;
   gradeLevel: string;
   duration: string;
+  term: string;
+  session: string;
   learningObjectives: string;
   additionalContext: string;
+}
+
+interface SavedLessonPlan {
+  id: string;
+  timestamp: string;
+  formData: FileFormData;
+  lessonPlan: any;
+  rawLessonPlanText: string;
+  lessonNote?: any;
 }
 
 export default function AILessonGeneratorPage() {
@@ -42,6 +53,8 @@ export default function AILessonGeneratorPage() {
     subject: '',
     gradeLevel: 'Year 7',
     duration: '45 mins',
+    term: '1st Term',
+    session: '2025/2026',
     learningObjectives: '',
     additionalContext: ''
   });
@@ -59,6 +72,20 @@ export default function AILessonGeneratorPage() {
   const [lessonPlan, setLessonPlan] = useState<any | null>(null);
   const [rawLessonPlanText, setRawLessonPlanText] = useState("");
   const [lessonNote, setLessonNote] = useState<any | null>(null);
+
+  const [savedPlans, setSavedPlans] = useState<SavedLessonPlan[]>([]);
+  const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('kia_ai_lesson_plans_history');
+      if (stored) {
+        setSavedPlans(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error("Failed to load lesson plans history:", e);
+    }
+  }, []);
 
   const [activeTab, setActiveTab] = useState<'lesson' | 'questions'>('lesson');
   const [questionFormData, setQuestionFormData] = useState({
@@ -170,6 +197,38 @@ export default function AILessonGeneratorPage() {
     }
   };
 
+  const handleLoadPlanFromHistory = (item: SavedLessonPlan) => {
+    setActiveHistoryId(item.id);
+    setFormData(item.formData);
+    setLessonPlan(item.lessonPlan);
+    setRawLessonPlanText(item.rawLessonPlanText);
+    setLessonNote(item.lessonNote || null);
+    setActiveTab('lesson');
+    setError('');
+  };
+
+  const handleDeletePlanFromHistory = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSavedPlans(prev => {
+      const updated = prev.filter(item => item.id !== id);
+      try {
+        localStorage.setItem('kia_ai_lesson_plans_history', JSON.stringify(updated));
+      } catch (err) {
+        console.error("Failed to save history on deletion:", err);
+      }
+      return updated;
+    });
+    if (activeHistoryId === id) {
+      setActiveHistoryId(null);
+    }
+  };
+
+  const handleClearHistory = () => {
+    localStorage.removeItem('kia_ai_lesson_plans_history');
+    setSavedPlans([]);
+    setActiveHistoryId(null);
+  };
+
   const handleGeneratePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.topic.trim() || !formData.subject.trim()) {
@@ -214,6 +273,31 @@ export default function AILessonGeneratorPage() {
       try {
         const parsed = JSON.parse(jsonStr);
         setLessonPlan(parsed);
+
+        // Save generated plan to history
+        try {
+          const newId = Date.now().toString();
+          const newItem: SavedLessonPlan = {
+            id: newId,
+            timestamp: new Date().toISOString(),
+            formData: { ...formData },
+            lessonPlan: parsed,
+            rawLessonPlanText: data.content
+          };
+          setActiveHistoryId(newId);
+          
+          setSavedPlans(prev => {
+            const filtered = prev.filter(item => 
+              !(item.formData.topic === formData.topic && item.formData.subject === formData.subject && item.formData.gradeLevel === formData.gradeLevel)
+            );
+            const updated = [newItem, ...filtered].slice(0, 20);
+            localStorage.setItem('kia_ai_lesson_plans_history', JSON.stringify(updated));
+            return updated;
+          });
+        } catch (historyErr) {
+          console.error("Failed to save to history:", historyErr);
+        }
+
       } catch (parseError) {
         console.error("Failed to parse JSON response:", parseError, jsonStr);
         setError("Received an invalid format from the AI. Check console for details.");
@@ -264,6 +348,25 @@ export default function AILessonGeneratorPage() {
       try {
         const parsed = JSON.parse(jsonStr);
         setLessonNote(parsed);
+
+        // Update active history item with the new lesson note
+        try {
+          if (activeHistoryId) {
+            setSavedPlans(prev => {
+              const updated = prev.map(item => {
+                if (item.id === activeHistoryId) {
+                  return { ...item, lessonNote: parsed };
+                }
+                return item;
+              });
+              localStorage.setItem('kia_ai_lesson_plans_history', JSON.stringify(updated));
+              return updated;
+            });
+          }
+        } catch (historyErr) {
+          console.error("Failed to sync note to history item:", historyErr);
+        }
+
       } catch (parseError) {
         console.error("Failed to parse NOTE JSON:", parseError, jsonStr);
         setError("Failed to parse the generated note.");
@@ -329,8 +432,8 @@ export default function AILessonGeneratorPage() {
           head: [['Field', 'Details']],
           body: [
             ['Subject', lessonPlan.header?.subject || formData.subject],
-            ['Term', lessonPlan.header?.term || 'Current Term'],
-            ['Session', lessonPlan.header?.session || '2023/2024'],
+            ['Term', lessonPlan.header?.term || formData.term || '1st Term'],
+            ['Session', lessonPlan.header?.session || formData.session || '2025/2026'],
             ['Year/Grade', lessonPlan.grid?.year || formData.gradeLevel],
             ['Topic', lessonPlan.grid?.topicSubTopics || formData.topic],
             ['Duration', lessonPlan.grid?.duration || formData.duration]
@@ -367,8 +470,8 @@ export default function AILessonGeneratorPage() {
         head: [['Field', 'Details']],
         body: [
           ['Subject', lessonPlan.header?.subject || formData.subject],
-          ['Term', lessonPlan.header?.term || 'Current Term'],
-          ['Session', lessonPlan.header?.session || '2023/2024'],
+          ['Term', lessonPlan.header?.term || formData.term || '1st Term'],
+          ['Session', lessonPlan.header?.session || formData.session || '2025/2026'],
           ['Year/Grade', lessonPlan.grid?.year || formData.gradeLevel],
           ['Topic', lessonPlan.grid?.topicSubTopics || formData.topic],
           ['Duration', lessonPlan.grid?.duration || formData.duration]
@@ -595,7 +698,7 @@ export default function AILessonGeneratorPage() {
       <div className="max-w-7xl w-full mx-auto px-4 py-12 flex flex-col lg:flex-row gap-8">
         
         {/* Form Column */}
-        <div className="lg:w-1/3">
+        <div className="lg:w-1/3 space-y-6">
           <div className="bg-white p-6 md:p-8 shadow-sm border border-gray-100 sticky top-24">
             <div className="flex border-b border-gray-100 mb-6">
               <button
@@ -674,6 +777,33 @@ export default function AILessonGeneratorPage() {
                       onChange={handleInputChange}
                       className="w-full bg-neutral-50 border border-gray-200 p-3 text-sm focus:outline-none focus:border-wine/50 focus:ring-1 focus:ring-wine/20 transition-all"
                       placeholder="e.g. 45 mins"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Term</label>
+                    <select
+                      name="term"
+                      value={formData.term}
+                      onChange={handleInputChange}
+                      className="w-full bg-neutral-50 border border-gray-200 p-3 text-sm focus:outline-none focus:border-wine/50 focus:ring-1 focus:ring-wine/20 transition-all"
+                    >
+                      <option value="1st Term">1st Term</option>
+                      <option value="2nd Term">2nd Term</option>
+                      <option value="3rd Term">3rd Term</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Session</label>
+                    <input
+                      type="text"
+                      name="session"
+                      value={formData.session}
+                      onChange={handleInputChange}
+                      className="w-full bg-neutral-50 border border-gray-200 p-3 text-sm focus:outline-none focus:border-wine/50 focus:ring-1 focus:ring-wine/20 transition-all"
+                      placeholder="e.g. 2025/2026"
                     />
                   </div>
                 </div>
@@ -819,6 +949,76 @@ export default function AILessonGeneratorPage() {
               </form>
             )}
           </div>
+
+          {/* History / Saved Plans Panel */}
+          <div className="bg-white p-6 md:p-8 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-wine" />
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Lesson History</h3>
+              </div>
+              {savedPlans.length > 0 && (
+                <button
+                  onClick={handleClearHistory}
+                  className="text-[10px] font-bold text-gray-400 hover:text-red transition-colors uppercase tracking-widest flex items-center gap-1 cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3 text-gray-400" />
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            {savedPlans.length === 0 ? (
+              <div className="py-8 text-center animate-fade-in">
+                <p className="text-xs text-gray-400">No recently generated lesson plans.</p>
+                <p className="text-[10px] text-gray-400 mt-1">Generated plans will appear here.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                {savedPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => handleLoadPlanFromHistory(plan)}
+                    className={`p-3 border transition-all cursor-pointer group/item hover:bg-neutral-50 flex items-start gap-3 relative ${
+                      activeHistoryId === plan.id
+                        ? 'border-wine bg-wine/[0.02]'
+                        : 'border-gray-100'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[9px] font-bold text-wine bg-wine/5 px-1.5 py-0.5 uppercase tracking-wide">
+                          {plan.formData.gradeLevel}
+                        </span>
+                        <span className="text-[9px] text-gray-400 font-mono">
+                          {new Date(plan.timestamp).toLocaleDateString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-gray-900 truncate group-hover/item:text-wine transition-colors">
+                        {plan.formData.topic}
+                      </h4>
+                      <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                        {plan.formData.subject} &bull; {plan.formData.term}
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={(e) => handleDeletePlanFromHistory(plan.id, e)}
+                      className="text-gray-300 hover:text-red p-1 rounded hover:bg-red/5 opacity-0 group-hover/item:opacity-100 transition-opacity cursor-pointer duration-150"
+                      title="Delete from history"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Output Column */}
@@ -871,12 +1071,12 @@ export default function AILessonGeneratorPage() {
                       <p className="font-medium text-gray-900">{lessonPlan.grid?.topicSubTopics || formData.topic}</p>
                    </div>
                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Year / Session</p>
-                      <p className="font-medium text-gray-900">{lessonPlan.grid?.year || formData.gradeLevel} &bull; {lessonPlan.header?.session}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Year / Term</p>
+                      <p className="font-medium text-gray-900">{lessonPlan.grid?.year || formData.gradeLevel} &bull; {lessonPlan.header?.term || formData.term}</p>
                    </div>
                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Duration</p>
-                      <p className="font-medium text-gray-900">{lessonPlan.grid?.duration || formData.duration}</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Session / Duration</p>
+                      <p className="font-medium text-gray-900">{lessonPlan.header?.session || formData.session} &bull; {lessonPlan.grid?.duration || formData.duration}</p>
                    </div>
                 </div>
 
