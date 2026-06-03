@@ -56,50 +56,7 @@ export default function AcademicsPage() {
   const [activeTabId, setActiveTabId] = useState(1);
   const location = useLocation();
 
-  const [activeId, setActiveId] = useState('awards');
 
-  const sidebarItems = [
-    { id: 'awards', label: 'Academic Awards' },
-    { id: 'accreditation', label: 'Accreditations' },
-    { id: 'curriculum', label: 'Curriculum Tracks' },
-    { id: 'advantage', label: 'Academic Advantage' },
-  ];
-
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    const sectionIds = ['awards', 'accreditation', 'curriculum', 'advantage'];
-    const observers = sectionIds.map(id => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setActiveId(id);
-          }
-        },
-        {
-          rootMargin: '-25% 0px -55% 0px'
-        }
-      );
-      observer.observe(el);
-      return { el, observer };
-    });
-
-    return () => {
-      observers.forEach(item => {
-        if (item) {
-          item.observer.unobserve(item.el);
-        }
-      });
-    };
-  }, []);
 
   useEffect(() => {
     const hash = location.hash.replace('#', '').toLowerCase();
@@ -177,47 +134,9 @@ export default function AcademicsPage() {
         </motion.p>
       </div>
 
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-20 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          
-          {/* Sticky Sidebar */}
-          <aside className="hidden lg:block lg:col-span-3 sticky top-32 h-fit pr-8 border-r border-[#6B0F1A]/5 self-start space-y-4">
-            <p className="text-[10px] uppercase font-bold text-red tracking-[0.2em] mb-4">Academics Hub</p>
-            <div className="relative flex flex-col gap-2">
-              {sidebarItems.map((item) => {
-                const isActive = activeId === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => scrollTo(item.id)}
-                    className={cn(
-                      "relative pr-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer select-none outline-none",
-                      isActive ? "text-wine font-extrabold" : "text-gray-400 hover:text-wine-dark"
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="academics-sidebar-indicator"
-                        className="absolute right-[-1px] top-1 bottom-1 w-[3px] bg-wine rounded-l-md"
-                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            
-            <div className="pt-6 border-t border-[#6B0F1A]/5 mt-6">
-              <span className="text-[9px] text-gray-400 block font-medium leading-relaxed">
-                Scroll to explore global certificates, awards, and advantages.
-              </span>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <div className="col-span-1 lg:col-span-9 space-y-32">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-20 w-full">
+        {/* Main Content */}
+        <div className="space-y-32">
             
             <section id="awards" className="scroll-mt-32">
               <AcademicsAwards />
@@ -322,6 +241,5 @@ export default function AcademicsPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
